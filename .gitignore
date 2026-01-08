@@ -16,7 +16,8 @@
 *.ear
 
 # Maven
-/target/
+# Ignore any target directories in the repository
+**/target/
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
