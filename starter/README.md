@@ -57,7 +57,7 @@ Once running (default port 8080), you can:
 
 1. **Start a process instance:**
    ```bash
-   curl -X POST http://localhost:8080/process/start
+   curl http://localhost:8080/start-process
    ```
 
 2. **Check application health:**
@@ -66,6 +66,71 @@ Once running (default port 8080), you can:
    ```
 
 The service task will execute the `ServiceDelegate`, which logs a message and sets a process variable.
+
+## Testing with Local Kubernetes Cluster (kind)
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) installed and running
+- [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) installed
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) installed
+
+### Steps
+
+1. **Build the application:**
+   ```bash
+   mvn clean package -DskipTests
+   ```
+
+2. **Build Docker image:**
+   ```bash
+   docker build -f src/main/docker/Dockerfile.jvm -t cibseven/cibseven-quarkus-example:local .
+   ```
+
+3. **Create kind cluster (if not exists):**
+   ```bash
+   kind create cluster --name cibseven-local
+   ```
+
+4. **Load Docker image into kind:**
+   ```bash
+   kind load docker-image cibseven/cibseven-quarkus-example:local --name cibseven-local
+   ```
+
+5. **Deploy to Kubernetes:**
+   ```bash
+   kubectl apply -f src/main/docker/deployment.yaml
+   ```
+
+6. **Verify deployment:**
+   ```bash
+   kubectl get pods
+   kubectl get svc
+   ```
+
+7. **Test the application:**
+   ```bash
+   kubectl port-forward svc/cibseven-quarkus-example 8080:8080 &
+   curl http://localhost:8080/start-process
+   pkill -f "kubectl port-forward"
+   ```
+
+8. **View logs:**
+   ```bash
+   kubectl logs -l app=cibseven-quarkus-example
+   ```
+
+### Cleanup
+
+To remove the deployment:
+```bash
+kubectl delete -f src/main/docker/deployment.yaml
+```
+
+To delete the kind cluster:
+```bash
+kind delete cluster --name cibseven-local
+```
 
 ## Process Details
 
