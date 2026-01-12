@@ -16,7 +16,7 @@ A basic Quarkus application showing:
 ```bash
 cd starter/
 mvn quarkus:dev
-curl -X POST http://localhost:8080/process/start
+curl -X POST http://localhost:8080/start-process
 ```
 
 See [starter/README.md](starter/README.md) for detailed instructions.
