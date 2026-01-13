@@ -28,7 +28,7 @@ Or from the `starter/` directory:
 mvn clean compile
 ```
 
-## Running
+## Running Locally
 
 ### Development Mode (with hot reload)
 
@@ -67,7 +67,9 @@ Once running (default port 8080), you can:
 
 The service task will execute the `ServiceDelegate`, which logs a message and sets a process variable.
 
-## Testing with Local Kubernetes Cluster (kind)
+## Running on Kubernetes (kind)
+
+This application is configured for Kubernetes deployment using Quarkus's built-in Kubernetes extension.
 
 ### Prerequisites
 
@@ -75,56 +77,69 @@ The service task will execute the `ServiceDelegate`, which logs a message and se
 - [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) installed
 - [kubectl](https://kubernetes.io/docs/tasks/tools/) installed
 
-### Steps
+### Quick Start
 
-1. **Build the application:**
-   ```bash
-   mvn clean package -DskipTests
-   ```
-
-2. **Build Docker image:**
-   ```bash
-   docker build -f src/main/docker/Dockerfile.jvm -t cibseven/cibseven-quarkus-example:local .
-   ```
-
-3. **Create kind cluster (if not exists):**
+1. **Create kind cluster (if not exists):**
    ```bash
    kind create cluster --name cibseven-local
    ```
 
-4. **Load Docker image into kind:**
+2. **Build and deploy to Kubernetes:**
    ```bash
-   kind load docker-image cibseven/cibseven-quarkus-example:local --name cibseven-local
+   mvn clean package -Dquarkus.kubernetes.deploy=true -Dquarkus.profile=kind
    ```
 
-5. **Deploy to Kubernetes:**
+   This single command will:
+   - Build the application
+   - Create the container image using Jib
+   - Generate Kubernetes manifests
+   - Deploy to your kind cluster
+
+3. **Load image into kind cluster:**
    ```bash
-   kubectl apply -f src/main/docker/deployment.yaml
+   kind load docker-image cibseven/quarkus-starter-example:latest --name cibseven-local
+   kubectl rollout restart deployment starter
    ```
 
-6. **Verify deployment:**
+4. **Verify deployment:**
    ```bash
-   kubectl get pods
-   kubectl get svc
+   kubectl get pods -l app.kubernetes.io/name=starter
+   kubectl get svc -l app.kubernetes.io/name=starter
    ```
 
-7. **Test the application:**
+5. **Access the application:**
    ```bash
-   kubectl port-forward svc/cibseven-quarkus-example 8080:8080 &
+   kubectl port-forward service/starter 8080:8080
+   ```
+
+6. **Test the application:**
+   ```bash
    curl http://localhost:8080/start-process
-   pkill -f "kubectl port-forward"
    ```
 
-8. **View logs:**
+   Or test directly inside the pod:
    ```bash
-   kubectl logs -l app=cibseven-quarkus-example
+   kubectl exec -it deployment/starter -- curl localhost:8080/start-process
    ```
+
+7. **View logs:**
+   ```bash
+   kubectl logs -l app.kubernetes.io/name=starter
+   ```
+
+### Development Mode with Kubernetes
+
+For development with live reload and automatic redeployment:
+
+```bash
+mvn quarkus:dev -Dquarkus.profile=kind
+```
 
 ### Cleanup
 
 To remove the deployment:
 ```bash
-kubectl delete -f src/main/docker/deployment.yaml
+kubectl delete deployment,service -l app.kubernetes.io/name=starter
 ```
 
 To delete the kind cluster:
