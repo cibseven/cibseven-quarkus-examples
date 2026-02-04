@@ -1,4 +1,4 @@
-# CIB Seven Quarkus Examples
+# CIB seven Quarkus Examples
 
 This repository contains examples demonstrating how to use CIB seven process engine with Quarkus framework.
 
